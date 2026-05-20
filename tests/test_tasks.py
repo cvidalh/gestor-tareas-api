@@ -88,3 +88,44 @@ def test_transition_to_done_then_reject_further_updates():
     resp = client.patch(f"/tasks/{task_id}", json={"title": "should fail"})
     assert resp.status_code == 400
     assert resp.json()["detail"] == "Cannot modify a completed task"
+
+
+def test_list_tasks_by_status_returns_filtered_results():
+    """GET /tasks/status/{status} devuelve solo las tareas con ese estado."""
+    _create_task(title="Pending task", status="pending")
+    _create_task(title="Done task", status="done")
+    _create_task(title="In progress task", status="in_progress")
+
+    resp = client.get("/tasks/status/pending")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Pending task"
+    assert data[0]["status"] == "pending"
+
+    resp = client.get("/tasks/status/done")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "Done task"
+
+    resp = client.get("/tasks/status/in_progress")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    assert data[0]["title"] == "In progress task"
+
+
+def test_list_tasks_by_status_returns_empty_list_when_no_matches():
+    """GET /tasks/status/{status} devuelve lista vacía si no hay tareas con ese estado."""
+    _create_task(title="Done task", status="done")
+
+    resp = client.get("/tasks/status/pending")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_list_tasks_by_status_rejects_invalid_status():
+    """GET /tasks/status/{status} con un valor no válido devuelve 422."""
+    resp = client.get("/tasks/status/invalid_value")
+    assert resp.status_code == 422
