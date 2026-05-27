@@ -107,3 +107,10 @@ Los tests usan una base de datos SQLite en memoria con `StaticPool` para garanti
 
 ### Nuevos endpoints
 - Todos los endpoints nuevos deben incluir al menos un test de caso error además del happy path obligatoriamente.
+
+### DOCUMENTACIÓN EN PRs
+Cada PR debe incluir:
+
+docstrings actualizados en las funciones modificadas
+Actualización del README si se añaden o modifican endpoints
+Descripción del PR con qué cambió, por qué cambió y cómo probarlo.
