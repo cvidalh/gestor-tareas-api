@@ -153,3 +153,35 @@ def test_eliminar_tarea_no_encontrada(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Task not found"
+
+
+# ---------------------------------------------------------------------------
+# Happy path: eliminar todas las tareas
+# ---------------------------------------------------------------------------
+
+def test_eliminar_todas_las_tareas(client):
+    # Crea varias tareas y comprueba que DELETE /tasks/ las elimina todas
+    client.post("/tasks/", json={"title": "Tarea uno"})
+    client.post("/tasks/", json={"title": "Tarea dos"})
+    client.post("/tasks/", json={"title": "Tarea tres"})
+
+    response = client.delete("/tasks/")
+
+    assert response.status_code == 204
+
+    # Verificar que la lista de tareas está vacía después del borrado
+    list_response = client.get("/tasks/")
+    assert list_response.status_code == 200
+    assert list_response.json() == []
+
+
+# ---------------------------------------------------------------------------
+# Caso de error: eliminar todas las tareas cuando no hay ninguna
+# ---------------------------------------------------------------------------
+
+def test_eliminar_todas_las_tareas_sin_datos(client):
+    # DELETE /tasks/ sin tareas en la BD debe devolver 404
+    response = client.delete("/tasks/")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No tasks to delete"
