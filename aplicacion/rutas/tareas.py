@@ -29,7 +29,6 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
 
 
 # Crea una nueva tarea y devuelve el recurso creado con código 201
-# Bug: no valida que el título tenga al menos 3 caracteres antes de persistir
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
     task = Task(**payload.model_dump())
@@ -46,12 +45,11 @@ def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-    # Bug: comprueba el estado del payload en lugar del estado actual de la tarea;
-    # una tarea ya completada puede modificarse sin ningún error
-    if payload.status == TaskStatus.done:
+    # Una tarea ya completada no admite más cambios
+    if task.status == TaskStatus.done:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se puede establecer el estado a done directamente",
+            detail="Cannot modify a completed task",
         )
 
     for field, value in payload.model_dump(exclude_unset=True).items():
