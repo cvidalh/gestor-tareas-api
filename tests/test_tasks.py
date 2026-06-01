@@ -118,11 +118,11 @@ def test_crear_tarea_titulo_demasiado_corto(client):
 
 
 def test_obtener_tarea_no_encontrada(client):
-    # GET sobre un id inexistente debe devolver 404 con detalle "Task not found"
+    # GET sobre un id inexistente debe devolver 404 con detalle "Tarea no encontrada"
     response = client.get("/tasks/9999")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Task not found"
+    assert response.json()["detail"] == "Tarea no encontrada"
 
 
 def test_actualizar_tarea_completada(client):
@@ -144,7 +144,7 @@ def test_actualizar_tarea_no_encontrada(client):
     response = client.patch("/tasks/9999", json={"title": "Cualquier cosa"})
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Task not found"
+    assert response.json()["detail"] == "Tarea no encontrada"
 
 
 def test_eliminar_tarea_no_encontrada(client):
