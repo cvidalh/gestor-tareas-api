@@ -15,6 +15,7 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.pending
     priority: TaskPriority = TaskPriority.medium
+    categoria: Optional[str] = None
 
 
 # Esquema para actualizar una tarea; todos los campos son opcionales (PATCH parcial)
@@ -24,6 +25,7 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
     priority: Optional[TaskPriority] = None
+    categoria: Optional[str] = None
 
 
 # Esquema de respuesta que devuelve la API; incluye los campos generados por la BD
@@ -34,6 +36,7 @@ class TaskResponse(BaseModel):
     status: TaskStatus
     priority: TaskPriority
     created_at: datetime
+    categoria: Optional[str]
 
     # from_attributes permite construir el esquema desde un objeto ORM de SQLAlchemy
     model_config = {"from_attributes": True}

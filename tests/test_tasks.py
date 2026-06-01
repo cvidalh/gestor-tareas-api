@@ -73,7 +73,11 @@ def client():
 
 def test_crear_tarea_correctamente(client):
     # Verifica que una tarea válida se crea y devuelve los campos esperados
-    payload = {"title": "Tarea de prueba", "description": "Descripción de ejemplo"}
+    payload = {
+        "title": "Tarea de prueba",
+        "description": "Descripción de ejemplo",
+        "categoria": "trabajo",
+    }
     response = client.post("/tasks/", json=payload)
 
     assert response.status_code == 201
@@ -81,8 +85,26 @@ def test_crear_tarea_correctamente(client):
     assert data["title"] == "Tarea de prueba"
     assert data["description"] == "Descripción de ejemplo"
     assert data["status"] == "pending"
+    assert data["categoria"] == "trabajo"
     assert "id" in data
     assert "created_at" in data
+
+
+def test_crear_tarea_sin_categoria(client):
+    # Verifica que el campo categoria es opcional y acepta valor nulo
+    payload = {"title": "Tarea sin categoría"}
+    response = client.post("/tasks/", json=payload)
+    assert response.status_code == 201
+    assert response.json()["categoria"] is None
+
+
+def test_actualizar_categoria_tarea(client):
+    # Verifica que se puede actualizar el campo categoria de una tarea existente
+    created = client.post("/tasks/", json={"title": "Tarea", "categoria": "trabajo"})
+    task_id = created.json()["id"]
+    response = client.patch(f"/tasks/{task_id}", json={"categoria": "hogar"})
+    assert response.status_code == 200
+    assert response.json()["categoria"] == "hogar"
 
 
 # ---------------------------------------------------------------------------
@@ -99,8 +121,8 @@ def test_listar_tareas_vacio(client):
 
 def test_listar_tareas_con_datos(client):
     # Crea dos tareas y comprueba que ambas aparecen en el listado
-    client.post("/tasks/", json={"title": "Primera tarea"})
-    client.post("/tasks/", json={"title": "Segunda tarea"})
+    client.post("/tasks/", json={"title": "Primera tarea", "categoria": "personal"})
+    client.post("/tasks/", json={"title": "Segunda tarea", "categoria": "personal"})
 
     response = client.get("/tasks/")
 
@@ -137,7 +159,8 @@ def test_obtener_tarea_no_encontrada(client):
 def test_actualizar_tarea_completada(client):
     # Crea una tarea ya en estado "done"; cualquier PATCH posterior debe rechazarse
     created = client.post(
-        "/tasks/", json={"title": "Tarea hecha", "status": "done"}
+        "/tasks/",
+        json={"title": "Tarea hecha", "status": "done", "categoria": "trabajo"},
     )
     assert created.status_code == 201
     task_id = created.json()["id"]

@@ -33,3 +33,4 @@ class Task(Base):
     priority = Column(Enum(TaskPriority), default=TaskPriority.medium, nullable=False)
     # La fecha de creación se asigna automáticamente al insertar el registro
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    categoria = Column(String(100), nullable=True)
