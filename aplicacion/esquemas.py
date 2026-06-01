@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from aplicacion.modelos import TaskStatus
+from aplicacion.modelos import TaskPriority, TaskStatus
 
 
 # Esquema para crear una nueva tarea; solo el título es obligatorio
@@ -14,6 +14,7 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=3)
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.pending
+    priority: TaskPriority = TaskPriority.medium
 
 
 # Esquema para actualizar una tarea; todos los campos son opcionales (PATCH parcial)
@@ -22,6 +23,7 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=3)
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
+    priority: Optional[TaskPriority] = None
 
 
 # Esquema de respuesta que devuelve la API; incluye los campos generados por la BD
@@ -30,6 +32,7 @@ class TaskResponse(BaseModel):
     title: str
     description: Optional[str]
     status: TaskStatus
+    priority: TaskPriority
     created_at: datetime
 
     # from_attributes permite construir el esquema desde un objeto ORM de SQLAlchemy
