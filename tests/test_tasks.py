@@ -7,6 +7,7 @@
 #   Casos de error
 #     - POST   /tasks       con título vacío o menor de 3 caracteres → 422
 #     - GET    /tasks/{id}  con id inexistente → 404
+#     - PATCH  /tasks/{id}  con título menor de 3 caracteres → 422
 #     - PATCH  /tasks/{id}  sobre una tarea con estado "done" → 400
 #     - PATCH  /tasks/{id}  con id inexistente → 404
 #     - DELETE /tasks/{id}  con id inexistente → 404
@@ -123,6 +124,20 @@ def test_obtener_tarea_no_encontrada(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Task not found"
+
+
+def test_actualizar_tarea_titulo_demasiado_corto(client):
+    # Un título de menos de 3 caracteres en PATCH debe rechazarse con 422
+    created = client.post(
+        "/tasks/", json={"title": "Tarea válida"}
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+
+    response = client.patch(f"/tasks/{task_id}", json={"title": "ab"})
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["type"] == "string_too_short"
 
 
 def test_actualizar_tarea_completada(client):
