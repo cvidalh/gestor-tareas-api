@@ -1,22 +1,28 @@
 # Definición de los endpoints REST para la gestión de tareas
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from aplicacion.base_de_datos import get_db
 from aplicacion.esquemas import TaskCreate, TaskResponse, TaskUpdate
-from aplicacion.modelos import Task, TaskStatus
+from aplicacion.modelos import Task, TaskPriority, TaskStatus
 
 # Router con prefijo /tasks; agrupa todos los endpoints de tareas
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-# Devuelve la lista completa de tareas almacenadas
+# Devuelve las tareas almacenadas; permite filtrar por prioridad
 @router.get("/", response_model=List[TaskResponse])
-def list_tasks(db: Session = Depends(get_db)):
-    return db.query(Task).all()
+def list_tasks(
+    priority: Optional[TaskPriority] = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Task)
+    if priority is not None:
+        query = query.filter(Task.priority == priority)
+    return query.all()
 
 
 # Devuelve una tarea por su identificador; 404 si no existe
@@ -28,7 +34,7 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
     return task
 
 
-# Crea una nueva tarea y devuelve el recurso creado con código 201
+# Crea una nueva tarea con prioridad (por defecto medium) y devuelve el recurso creado
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
     task = Task(**payload.model_dump())

@@ -60,6 +60,7 @@ La base de datos SQLite (`tareas.db`) se crea automáticamente en el directorio 
 | `title` | `String(255)` | sí | — | Título de la tarea (mínimo 3 caracteres) |
 | `description` | `String` | no | `null` | Descripción opcional de la tarea |
 | `status` | `TaskStatus` | sí | `pending` | Estado actual de la tarea |
+| `priority` | `TaskPriority` | no | `medium` | Nivel de prioridad de la tarea |
 | `created_at` | `DateTime` | auto | fecha/hora UTC actual | Fecha de creación (asignada automáticamente) |
 
 ### Enum `TaskStatus`
@@ -70,18 +71,36 @@ La base de datos SQLite (`tareas.db`) se crea automáticamente en el directorio 
 | `in_progress` | Tarea en progreso |
 | `done` | Tarea completada |
 
+### Enum `TaskPriority`
+
+| Valor | Descripción |
+|---|---|
+| `low` | Prioridad baja |
+| `medium` | Prioridad media (valor por defecto) |
+| `high` | Prioridad alta |
+
 ## Documentación de endpoints
 
 ### `GET /tasks/` — Listar todas las tareas
 
-Devuelve la lista completa de tareas almacenadas.
+Devuelve la lista de tareas almacenadas. Permite filtrar por prioridad mediante query parameter.
 
-**Parámetros:** ninguno.
+**Parámetros de consulta (query):**
+
+| Parámetro | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `priority` | `string` | no | Filtra por prioridad (`low`, `medium`, `high`) |
 
 **Ejemplo:**
 
 ```bash
 curl http://127.0.0.1:8000/tasks/
+```
+
+**Ejemplo con filtro por prioridad:**
+
+```bash
+curl http://127.0.0.1:8000/tasks/?priority=high
 ```
 
 **Response — `200 OK`:**
@@ -93,6 +112,7 @@ curl http://127.0.0.1:8000/tasks/
     "title": "Revisar documentación",
     "description": "Actualizar el README del proyecto",
     "status": "pending",
+    "priority": "medium",
     "created_at": "2025-01-15T10:30:00"
   }
 ]
@@ -124,6 +144,7 @@ curl http://127.0.0.1:8000/tasks/1
   "title": "Revisar documentación",
   "description": "Actualizar el README del proyecto",
   "status": "pending",
+  "priority": "medium",
   "created_at": "2025-01-15T10:30:00"
 }
 ```
@@ -153,13 +174,14 @@ Crea una tarea y devuelve el recurso creado.
 | `title` | `string` | sí | — | Título de la tarea (mínimo 3 caracteres) |
 | `description` | `string` | no | `null` | Descripción de la tarea |
 | `status` | `string` | no | `"pending"` | Estado inicial (`pending`, `in_progress`, `done`) |
+| `priority` | `string` | no | `"medium"` | Prioridad (`low`, `medium`, `high`) |
 
 **Ejemplo:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/tasks/ \
   -H "Content-Type: application/json" \
-  -d '{"title": "Comprar café", "description": "Café molido de Colombia"}'
+  -d '{"title": "Comprar café", "description": "Café molido de Colombia", "priority": "high"}'
 ```
 
 **Response — `201 Created`:**
@@ -170,6 +192,7 @@ curl -X POST http://127.0.0.1:8000/tasks/ \
   "title": "Comprar café",
   "description": "Café molido de Colombia",
   "status": "pending",
+  "priority": "high",
   "created_at": "2025-01-15T10:30:00"
 }
 ```
@@ -215,6 +238,7 @@ Modifica solo los campos enviados en el cuerpo de la petición. No permite modif
 | `title` | `string` | no | Nuevo título (mínimo 3 caracteres) |
 | `description` | `string` | no | Nueva descripción |
 | `status` | `string` | no | Nuevo estado (`pending`, `in_progress`, `done`) |
+| `priority` | `string` | no | Nueva prioridad (`low`, `medium`, `high`) |
 
 **Ejemplo:**
 
@@ -232,6 +256,7 @@ curl -X PATCH http://127.0.0.1:8000/tasks/1 \
   "title": "Comprar café",
   "description": "Café molido de Colombia",
   "status": "in_progress",
+  "priority": "high",
   "created_at": "2025-01-15T10:30:00"
 }
 ```
