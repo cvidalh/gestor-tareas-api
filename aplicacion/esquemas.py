@@ -5,7 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from aplicacion.modelos import TaskStatus
+from aplicacion.modelos import TaskPriority, TaskStatus
 
 
 # Esquema para crear una nueva tarea; solo el título es obligatorio
@@ -14,6 +14,7 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=3)
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.pending
+    priority: TaskPriority = TaskPriority.medium
     categoria: Optional[str] = None
 
 
@@ -23,6 +24,7 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=3)
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
+    priority: Optional[TaskPriority] = None
     categoria: Optional[str] = None
 
 
@@ -32,6 +34,7 @@ class TaskResponse(BaseModel):
     title: str
     description: Optional[str]
     status: TaskStatus
+    priority: TaskPriority
     created_at: datetime
     categoria: Optional[str]
 
