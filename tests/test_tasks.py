@@ -4,6 +4,13 @@
 #   Happy path
 #     - POST   /tasks       → crear tarea correctamente
 #     - GET    /tasks       → listar tareas (vacío y con datos)
+#   Filtro por estado
+#     - GET    /tasks?status=<val> → devuelve solo tareas con ese estado
+#     - GET    /tasks?status=invalido → 422
+#   Límite de resultados
+#     - GET    /tasks?limit=N → devuelve como máximo N tareas
+#     - GET    /tasks        → límite por defecto 10
+#     - GET    /tasks?limit=0 → 422 (debe ser >= 1)
 #   Casos de error
 #     - POST   /tasks       con título vacío o menor de 3 caracteres → 422
 #     - GET    /tasks/{id}  con id inexistente → 404
@@ -119,6 +126,81 @@ def test_listar_tareas_con_datos(client):
 
     assert response.status_code == 200
     assert len(response.json()) == 2
+
+
+# ---------------------------------------------------------------------------
+# Filtro por estado en list_tasks
+# ---------------------------------------------------------------------------
+
+def test_filtrar_tareas_por_estado(client):
+    # Crea tareas con distintos estados y verifica que el filtro devuelve solo las coincidentes
+    client.post("/tasks/", json={"title": "Tarea pendiente"})
+    created = client.post("/tasks/", json={"title": "Tarea en progreso"})
+    task_id = created.json()["id"]
+    client.patch(f"/tasks/{task_id}", json={"status": "in_progress"})
+
+    response = client.get("/tasks/", params={"status": "in_progress"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["status"] == "in_progress"
+
+
+def test_filtrar_tareas_por_estado_pending(client):
+    # Verifica que el filtro por estado pending excluye las tareas in_progress
+    client.post("/tasks/", json={"title": "Pendiente uno"})
+    client.post("/tasks/", json={"title": "Pendiente dos"})
+    created = client.post("/tasks/", json={"title": "En progreso"})
+    task_id = created.json()["id"]
+    client.patch(f"/tasks/{task_id}", json={"status": "in_progress"})
+
+    response = client.get("/tasks/", params={"status": "pending"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert all(t["status"] == "pending" for t in data)
+
+
+def test_filtrar_tareas_estado_invalido(client):
+    # Un valor de estado no reconocido devuelve 422
+    response = client.get("/tasks/", params={"status": "invalido"})
+
+    assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Límite de resultados en list_tasks
+# ---------------------------------------------------------------------------
+
+def test_limit_restringe_cantidad_de_resultados(client):
+    # Crea 5 tareas y verifica que limit=2 solo devuelve 2
+    for i in range(5):
+        client.post("/tasks/", json={"title": f"Tarea {i}"})
+
+    response = client.get("/tasks/", params={"limit": 2})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+def test_limit_por_defecto_es_10(client):
+    # Crea 12 tareas; sin parámetro limit explícito se devuelven como máximo 10
+    for i in range(12):
+        client.post("/tasks/", json={"title": f"Tarea {i}"})
+
+    response = client.get("/tasks/")
+
+    assert response.status_code == 200
+    assert len(response.json()) == 10
+
+
+def test_limit_menor_que_uno_es_rechazado(client):
+    # limit debe ser >= 1; un valor de 0 devuelve 422
+    response = client.get("/tasks/", params={"limit": 0})
+
+    assert response.status_code == 422
 
 
 # ---------------------------------------------------------------------------
