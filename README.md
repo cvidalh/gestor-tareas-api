@@ -74,14 +74,22 @@ La base de datos SQLite (`tareas.db`) se crea automáticamente en el directorio 
 
 ### `GET /tasks/` — Listar todas las tareas
 
-Devuelve la lista completa de tareas almacenadas.
+Devuelve la lista de tareas almacenadas, opcionalmente limitada.
 
-**Parámetros:** ninguno.
+**Parámetros de query:**
+
+| Parámetro | Tipo | Obligatorio | Valor por defecto | Descripción |
+|---|---|---|---|---|
+| `limit` | `int` | no | sin límite | Número máximo de tareas a devolver (≥ 1) |
 
 **Ejemplo:**
 
 ```bash
+# Todas las tareas
 curl http://127.0.0.1:8000/tasks/
+
+# Máximo 5 tareas
+curl http://127.0.0.1:8000/tasks/?limit=5
 ```
 
 **Response — `200 OK`:**
