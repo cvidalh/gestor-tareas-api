@@ -121,6 +121,36 @@ def test_listar_tareas_con_datos(client):
     assert len(response.json()) == 2
 
 
+def test_listar_tareas_con_limit(client):
+    # Crea tres tareas y comprueba que limit restringe la cantidad devuelta
+    client.post("/tasks/", json={"title": "Tarea uno"})
+    client.post("/tasks/", json={"title": "Tarea dos"})
+    client.post("/tasks/", json={"title": "Tarea tres"})
+
+    response = client.get("/tasks/", params={"limit": 2})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+def test_listar_tareas_limit_mayor_que_total(client):
+    # Si limit supera la cantidad de tareas existentes, devuelve todas
+    client.post("/tasks/", json={"title": "Única tarea"})
+
+    response = client.get("/tasks/", params={"limit": 100})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+def test_listar_tareas_limit_invalido(client):
+    # limit=0 o negativo debe rechazarse con 422 (ge=1 en Query)
+    response = client.get("/tasks/", params={"limit": 0})
+
+    assert response.status_code == 422
+    assert response.json()["detail"] is not None
+
+
 # ---------------------------------------------------------------------------
 # Casos de error
 # ---------------------------------------------------------------------------
