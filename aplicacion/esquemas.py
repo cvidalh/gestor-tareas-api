@@ -12,7 +12,7 @@ from aplicacion.modelos import TaskStatus
 class TaskCreate(BaseModel):
     # El título debe tener al menos 3 caracteres para evitar entradas vacías o triviales
     title: str = Field(min_length=3)
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=200)
     status: TaskStatus = TaskStatus.pending
     categoria: Optional[str] = None
 
@@ -21,7 +21,7 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     # Si se envía el título, debe seguir cumpliendo la longitud mínima
     title: Optional[str] = Field(default=None, min_length=3)
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=200)
     status: Optional[TaskStatus] = None
     categoria: Optional[str] = None
 

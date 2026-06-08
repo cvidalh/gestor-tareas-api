@@ -6,6 +6,8 @@
 #     - GET    /tasks       → listar tareas (vacío y con datos)
 #   Casos de error
 #     - POST   /tasks       con título vacío o menor de 3 caracteres → 422
+#     - POST   /tasks       con descripción mayor a 200 caracteres → 422
+#     - PATCH  /tasks/{id}  con descripción mayor a 200 caracteres → 422
 #     - GET    /tasks/{id}  con id inexistente → 404
 #     - PATCH  /tasks/{id}  sobre una tarea con estado "done" → 400
 #     - PATCH  /tasks/{id}  con id inexistente → 404
@@ -135,6 +137,38 @@ def test_crear_tarea_titulo_vacio(client):
 def test_crear_tarea_titulo_demasiado_corto(client):
     # Un título de 2 caracteres también incumple min_length=3 → 422
     response = client.post("/tasks/", json={"title": "ab"})
+
+    assert response.status_code == 422
+
+
+def test_crear_tarea_descripcion_excede_max(client):
+    # Una descripción de más de 200 caracteres incumple max_length=200 → 422
+    response = client.post(
+        "/tasks/", json={"title": "Tarea válida", "description": "x" * 201}
+    )
+
+    assert response.status_code == 422
+
+
+def test_crear_tarea_descripcion_en_limite(client):
+    # Una descripción de exactamente 200 caracteres debe aceptarse
+    desc_200 = "a" * 200
+    response = client.post(
+        "/tasks/", json={"title": "Tarea límite", "description": desc_200}
+    )
+
+    assert response.status_code == 201
+    assert response.json()["description"] == desc_200
+
+
+def test_actualizar_descripcion_excede_max(client):
+    # Actualizar con una descripción de más de 200 caracteres → 422
+    created = client.post("/tasks/", json={"title": "Tarea"})
+    task_id = created.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}", json={"description": "x" * 201}
+    )
 
     assert response.status_code == 422
 
