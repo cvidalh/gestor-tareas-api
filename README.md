@@ -58,7 +58,7 @@ La base de datos SQLite (`tareas.db`) se crea automáticamente en el directorio 
 |---|---|---|---|---|
 | `id` | `Integer` | auto | autoincremental | Identificador único de la tarea |
 | `title` | `String(255)` | sí | — | Título de la tarea (mínimo 3 caracteres) |
-| `description` | `String` | no | `null` | Descripción opcional de la tarea |
+| `description` | `String(200)` | no | `null` | Descripción opcional de la tarea (máximo 200 caracteres) |
 | `status` | `TaskStatus` | sí | `pending` | Estado actual de la tarea |
 | `created_at` | `DateTime` | auto | fecha/hora UTC actual | Fecha de creación (asignada automáticamente) |
 
@@ -151,7 +151,7 @@ Crea una tarea y devuelve el recurso creado.
 | Campo | Tipo | Obligatorio | Valor por defecto | Descripción |
 |---|---|---|---|---|
 | `title` | `string` | sí | — | Título de la tarea (mínimo 3 caracteres) |
-| `description` | `string` | no | `null` | Descripción de la tarea |
+| `description` | `string` | no | `null` | Descripción de la tarea (máximo 200 caracteres) |
 | `status` | `string` | no | `"pending"` | Estado inicial (`pending`, `in_progress`, `done`) |
 
 **Ejemplo:**
@@ -213,7 +213,7 @@ Modifica solo los campos enviados en el cuerpo de la petición. No permite modif
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
 | `title` | `string` | no | Nuevo título (mínimo 3 caracteres) |
-| `description` | `string` | no | Nueva descripción |
+| `description` | `string` | no | Nueva descripción (máximo 200 caracteres) |
 | `status` | `string` | no | Nuevo estado (`pending`, `in_progress`, `done`) |
 
 **Ejemplo:**
@@ -300,6 +300,7 @@ curl -X DELETE http://127.0.0.1:8000/tasks/9999
 
 - **Tareas completadas inmutables:** una tarea con estado `done` no admite modificaciones vía `PATCH`. La API devuelve `400 Bad Request` con el mensaje `"Cannot modify a completed task"`.
 - **Longitud mínima del título:** el campo `title` debe tener al menos 3 caracteres, tanto al crear (`POST`) como al actualizar (`PATCH`). Valores más cortos devuelven `422 Unprocessable Entity`.
+- **Longitud máxima de la descripción:** el campo `description` admite un máximo de 200 caracteres. Valores más largos devuelven `422 Unprocessable Entity`.
 - **Estado por defecto:** las tareas se crean con estado `pending` si no se especifica otro.
 - **Fecha de creación automática:** el campo `created_at` se asigna automáticamente con la fecha y hora UTC del momento de creación.
 
