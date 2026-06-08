@@ -57,6 +57,36 @@ def update_task(task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)
     return task
 
 
+# Marca una tarea como completada (estado "done"); no requiere cuerpo en la petición
+@router.patch("/{task_id}/complete", response_model=TaskResponse)
+def complete_task(task_id: int, db: Session = Depends(get_db)):
+    """Marca una tarea como completada cambiando su estado a 'done'.
+
+    Args:
+        task_id: Identificador de la tarea a completar.
+        db: Sesión de base de datos inyectada por FastAPI.
+
+    Returns:
+        La tarea actualizada con estado 'done'.
+
+    Raises:
+        HTTPException 404: Si la tarea no existe.
+        HTTPException 400: Si la tarea ya está completada.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
+    if task.status == TaskStatus.done:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La tarea ya está completada",
+        )
+    task.status = TaskStatus.done
+    db.commit()
+    db.refresh(task)
+    return task
+
+
 # Elimina una tarea de la base de datos; devuelve 204 sin cuerpo
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id: int, db: Session = Depends(get_db)):

@@ -266,6 +266,61 @@ curl -X PATCH http://127.0.0.1:8000/tasks/9999 \
 
 ---
 
+### `PATCH /tasks/{task_id}/complete` — Marcar una tarea como completada
+
+Cambia el estado de la tarea a `done`. No requiere cuerpo en la petición. No permite completar una tarea que ya está en estado `done`.
+
+**Parámetros de ruta:**
+
+| Parámetro | Tipo | Obligatorio | Descripción |
+|---|---|---|---|
+| `task_id` | `int` | sí | Identificador de la tarea |
+
+**Ejemplo:**
+
+```bash
+curl -X PATCH http://127.0.0.1:8000/tasks/1/complete
+```
+
+**Response — `200 OK`:**
+
+```json
+{
+  "id": 1,
+  "title": "Comprar café",
+  "description": "Café molido de Colombia",
+  "status": "done",
+  "created_at": "2025-01-15T10:30:00",
+  "categoria": null
+}
+```
+
+**Error — `400 Bad Request` (tarea ya completada):**
+
+```bash
+curl -X PATCH http://127.0.0.1:8000/tasks/1/complete
+```
+
+```json
+{
+  "detail": "La tarea ya está completada"
+}
+```
+
+**Error — `404 Not Found`:**
+
+```bash
+curl -X PATCH http://127.0.0.1:8000/tasks/9999/complete
+```
+
+```json
+{
+  "detail": "Tarea no encontrada"
+}
+```
+
+---
+
 ### `DELETE /tasks/{task_id}` — Eliminar una tarea
 
 Elimina una tarea de la base de datos. Devuelve `204` sin cuerpo.

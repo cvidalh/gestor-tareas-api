@@ -4,11 +4,15 @@
 #   Happy path
 #     - POST   /tasks       → crear tarea correctamente
 #     - GET    /tasks       → listar tareas (vacío y con datos)
+#   Happy path (complete)
+#     - PATCH  /tasks/{id}/complete → marca tarea como done
 #   Casos de error
 #     - POST   /tasks       con título vacío o menor de 3 caracteres → 422
 #     - GET    /tasks/{id}  con id inexistente → 404
 #     - PATCH  /tasks/{id}  sobre una tarea con estado "done" → 400
 #     - PATCH  /tasks/{id}  con id inexistente → 404
+#     - PATCH  /tasks/{id}/complete con id inexistente → 404
+#     - PATCH  /tasks/{id}/complete sobre tarea ya completada → 400
 #     - DELETE /tasks/{id}  con id inexistente → 404
 
 import pytest
@@ -169,6 +173,52 @@ def test_actualizar_tarea_no_encontrada(client):
     assert response.status_code == 404
     assert response.json()["detail"] == "Tarea no encontrada"
 
+
+# ---------------------------------------------------------------------------
+# Happy path: completar tarea
+# ---------------------------------------------------------------------------
+
+def test_completar_tarea_correctamente(client):
+    # Crea una tarea pendiente y la marca como completada vía PATCH /complete
+    created = client.post("/tasks/", json={"title": "Tarea por completar"})
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+    assert created.json()["status"] == "pending"
+
+    response = client.patch(f"/tasks/{task_id}/complete")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "done"
+    assert data["id"] == task_id
+
+
+def test_completar_tarea_no_encontrada(client):
+    # PATCH /complete sobre un id inexistente debe devolver 404
+    response = client.patch("/tasks/9999/complete")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Tarea no encontrada"
+
+
+def test_completar_tarea_ya_completada(client):
+    # Una tarea ya en estado "done" no puede volver a completarse
+    created = client.post(
+        "/tasks/",
+        json={"title": "Tarea hecha", "status": "done"},
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+
+    response = client.patch(f"/tasks/{task_id}/complete")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "La tarea ya está completada"
+
+
+# ---------------------------------------------------------------------------
+# Casos de error: eliminar
+# ---------------------------------------------------------------------------
 
 def test_eliminar_tarea_no_encontrada(client):
     # DELETE sobre un id inexistente debe devolver 404
