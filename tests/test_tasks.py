@@ -4,6 +4,10 @@
 #   Happy path
 #     - POST   /tasks       → crear tarea correctamente
 #     - GET    /tasks       → listar tareas (vacío y con datos)
+#   Validación de descripción
+#     - POST   /tasks       con descripción de exactamente 200 caracteres → 201
+#     - POST   /tasks       con descripción mayor de 200 caracteres → 422
+#     - PATCH  /tasks/{id}  con descripción mayor de 200 caracteres → 422
 #   Casos de error
 #     - POST   /tasks       con título vacío o menor de 3 caracteres → 422
 #     - GET    /tasks/{id}  con id inexistente → 404
@@ -124,6 +128,30 @@ def test_listar_tareas_con_datos(client):
 # ---------------------------------------------------------------------------
 # Casos de error
 # ---------------------------------------------------------------------------
+
+def test_crear_tarea_descripcion_max_200(client):
+    # Una descripción de exactamente 200 caracteres debe aceptarse sin problemas
+    desc = "a" * 200
+    response = client.post("/tasks/", json={"title": "Tarea válida", "description": desc})
+    assert response.status_code == 201
+    assert response.json()["description"] == desc
+
+
+def test_crear_tarea_descripcion_excede_200(client):
+    # Una descripción de 201 caracteres incumple max_length=200 → 422
+    desc = "a" * 201
+    response = client.post("/tasks/", json={"title": "Tarea válida", "description": desc})
+    assert response.status_code == 422
+
+
+def test_actualizar_descripcion_excede_200(client):
+    # PATCH con descripción superior a 200 caracteres debe rechazarse → 422
+    created = client.post("/tasks/", json={"title": "Tarea base"})
+    task_id = created.json()["id"]
+    desc = "b" * 201
+    response = client.patch(f"/tasks/{task_id}", json={"description": desc})
+    assert response.status_code == 422
+
 
 def test_crear_tarea_titulo_vacio(client):
     # Título vacío incumple min_length=3 en TaskCreate → 422 de validación de Pydantic
