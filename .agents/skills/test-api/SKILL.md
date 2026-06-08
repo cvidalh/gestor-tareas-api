@@ -1,6 +1,7 @@
 ---
 name: test-api
 description: Ejecutar los tests de la API gestor-tareas-api y verificar que pasan correctamente.
+argument-hint: <PR>
 ---
 
 ## Configuración
